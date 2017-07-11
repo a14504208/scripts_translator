@@ -77,7 +77,22 @@ def openFile():
             treeviews[tag].delete(row)
         for line in texts[tag]:
             treeviews[tag].insert("", "end", values=line)
-        
+    
+def doubleClickToEdit(event):
+    rowid = treeviews["text"].identify_row(event.y)
+    colid = treeviews["text"].identify_column(event.x)
+    
+    x, y, width, height = treeviews["text"].bbox(rowid, colid)
+    
+    text = treeviews["text"].set(rowid, colid)
+    
+    entry = Entry(treeviews["text"])
+    entry.place(x = x, y = y, width = width, height = height)
+    entry.insert(0, text)
+    entry.focus_set()
+    entry.select_range(0, "end")
+    entry.bind("<Return>", lambda e: entry.destroy())
+
 root = Tk()
 root.title("Scripts Traslator")
 
@@ -130,5 +145,7 @@ for tag in tags:
     
     f.grid_columnconfigure(0, weight=1)
     f.grid_rowconfigure(0, weight=1)
+
+treeviews["text"].bind("<Double Button-1>", doubleClickToEdit)
 
 root.mainloop()
