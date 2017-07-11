@@ -7,6 +7,8 @@ Created on Tue Jul 11 15:49:41 2017
 from tkinter import *
 from tkinter import ttk
 
+import re
+
 class ScriptView(ttk.Frame):
     def __init__(self, master, tag, scripts = None):
         """
@@ -18,7 +20,7 @@ class ScriptView(ttk.Frame):
         self.__scripts = scripts
         
         # Bind treeview to the self frame
-        self.__tree = ttk.Treeview(self, columns = ("orig", "trans"))
+        self.__tree = ttk.Treeview(self, columns = ("char", "orig", "trans"))
         
         # Bind events to treeview
         self.bindTreeview()
@@ -28,10 +30,6 @@ class ScriptView(ttk.Frame):
         
         # Display scripts
         self.displayScripts()
-        
-        # Adjust to resize
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
     
     def bindTreeview(self):
         pass
@@ -43,13 +41,20 @@ class ScriptView(ttk.Frame):
         self.__tree.grid(column=0, row=0, sticky="WNSE")
         self.__tree["show"] = "headings"
         
+        self.__tree.heading("char", text="Character")
         self.__tree.heading("orig", text="Original")
         self.__tree.heading("trans", text="Translation")
+        
+        self.__tree.column("char", width=100, stretch=False)
         
         # Set scrollbar
         scrollbar = ttk.Scrollbar(self, command=self.__tree.yview)
         self.__tree["yscrollcommand"] = scrollbar.set
         scrollbar.grid(column=1, row=0, sticky="NS")
+        
+        # Adjust to resize
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
         
     def displayScripts(self):
         """
@@ -59,8 +64,17 @@ class ScriptView(ttk.Frame):
             return
         
         for iid in self.__scripts.keys():
+            char_re = re.compile("【(.+)】")
+            
             comment, orig, trans = self.__scripts[iid]
-            self.__tree.insert("", "end", iid=iid, values=(orig, trans))
+            
+            char_match = char_re.search(comment)
+            if char_match:
+                char = char_match.group(1)
+            else:
+                char = ""
+            
+            self.__tree.insert("", "end", iid=iid, values=(char, orig, trans))
     
     def doubleClickToEdit(self):
         pass
