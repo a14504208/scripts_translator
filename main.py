@@ -109,9 +109,11 @@ if __name__ == "__main__":
     
     root.grid_columnconfigure(0, weight=1)
     root.grid_rowconfigure(0, weight=1)
-    
+        
     # Temporary line, replaced by reading temp file in the future
     openFile()
+    
+    
     
     root.mainloop()
     

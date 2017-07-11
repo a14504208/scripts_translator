@@ -9,6 +9,8 @@ from tkinter import ttk
 
 import re
 
+from edit_window import EditWindow
+
 class ScriptView(ttk.Frame):
     def __init__(self, master, scripts):
         """
@@ -31,7 +33,7 @@ class ScriptView(ttk.Frame):
         self.displayScripts()
     
     def bindTreeview(self):
-        pass
+        self.__tree.bind("<Double Button-1>", self.doubleClickToEdit)
     
     def displayTreeview(self):
         """
@@ -72,10 +74,20 @@ class ScriptView(ttk.Frame):
             
             self.__tree.insert("", "end", iid=iid, values=(char, orig, trans))
     
-    def doubleClickToEdit(self):
-        pass
-    
-    def editScript(self):
+    def doubleClickToEdit(self, event):
+        """
+        Double click on the row to popup a window for editing the line
+        """
+        # Get the contents in the row
+        rowid = self.__tree.identify_row(event.y)
+        contents = self.__tree.set(rowid)
+        
+        EditWindow(self, rowid, contents)
+        
+        #edit_w = Toplevel(self)
+        
+
+    def editLine(self):
         pass
     
     def outputScripts(self):
