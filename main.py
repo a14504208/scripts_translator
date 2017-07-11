@@ -13,71 +13,52 @@ import re
 
 def parseScripts(filepath):
     fp = open(filepath, encoding="UTF-8")
-    parsed_orig = {"name": [],
-                   "text": [],
-                   "other": []}
-    parsed_trans = {"name": [],
-                   "text": [],
-                   "other": []}
     
-    char_arr = []
+    iid_re = re.compile("<.+(([NTZ])[0-9]+)>")
     
-    tags = ["name", "text", "other"]
+    tags = {"N": "name", "T": "text", "Z": "other"}
     
-    orig_re = re.compile("<ja([TNZ])[0-9]+>")
-    trans_re = re.compile("<ch([TNZ])[0-9]+>")
-    text_comment_re = re.compile("//TEXT")
-    char_re = re.compile("【(.+)】")
+    # In the form of {iid: [comment, orig, trans]}    
+    parsed = {"name": {},
+              "text": {},
+              "other": {}}
     
-    for line in fp.readlines():
-        line = line.strip()
-        
-        search = text_comment_re.search(line)
-        if search:
-            search = char_re.search(line)
-            if search:
-                char_arr.append(search.group(1))
-            else:
-                char_arr.append("")
-            continue
-
-        search = orig_re.search(line)
-        if search:
-            if search.group(1) == "N":    
-                parsed_orig["name"].append(line[search.end():])
-            elif search.group(1) == "T":
-                parsed_orig["text"].append(line[search.end():])
-            else:
-                parsed_orig["other"].append(line[search.end():])
-            continue
-        
-        search = trans_re.search(line)
-        if search:
-            if search.group(1) == "N":    
-                parsed_trans["name"].append(line[search.end():])
-            elif search.group(1) == "T":
-                parsed_trans["text"].append(line[search.end():])
-            else:
-                parsed_trans["other"].append(line[search.end():])
+    # Expect file in the triad form: comment begin with //, orig followed by
+    # trans
+    line = fp.readline()
+    while (line != ""):
+        # Begin of the triad
+        if (line.startswith("///")):
+            pass
+        elif (line.startswith("//")):
+            comment = line.rstrip()
+            
+            orig_line = fp.readline()
+            head = iid_re.search(orig_line)
+            iid = head.group(1)
+            tag = tags[head.group(2)]
+            orig = orig_line[head.end():].rstrip()
+            
+            trans_line = fp.readline()
+            head = iid_re.search(trans_line)
+            trans = trans_line[head.end():].rstrip()
+            
+            parsed[tag][iid] = (comment, orig, trans)
+            
+        line = fp.readline()
     
-    parsed_text = {}
-    for tag in tags:
-        if tag == "text":
-            parsed_text[tag] = zip(char_arr, parsed_orig[tag], parsed_trans[tag])
-        else:
-            parsed_text[tag] = zip(parsed_orig[tag], parsed_trans[tag])
-    
-    return parsed_text
+    return parsed
 
 def openFile():
     fileName = filedialog.askopenfilename()
-    texts = parseScripts(fileName)
+    parsed = parseScripts(fileName)
     
-    for tag in texts.keys():
-        for row in treeviews[tag].get_children():
-            treeviews[tag].delete(row)
-        for line in texts[tag]:
-            treeviews[tag].insert("", "end", values=line)
+    for tab in n.tabs():
+        n.forget(tab)
+    
+    for tag in parsed.keys():
+        f = ScriptView(n, tag, parsed[tag])
+        n.add(f, text = tag.capitalize())
     
 def doubleClickToEdit(event):
     rowid = treeviews["text"].identify_row(event.y)
@@ -121,33 +102,7 @@ frames = {}
 treeviews = {}
 
 for tag in tags:
-#    f = ttk.Frame(n)
-#    if tag == "text":
-#        treeview = ttk.Treeview(f, columns=("character", "original", "translation"))
-#    else:
-#        treeview = ttk.Treeview(f, columns=("original", "translation"))
     f = ScriptView(n, tag)
-    
-#    frames[tag] = f
-#    treeviews[tag] = treeview
     n.add(f, text = tag.capitalize())
-    
-#    treeview.grid(column=0, row=0, sticky="WNSE")
-#    treeview["show"] = "headings"
-    
-#    treeview.heading("original", text="Original")
-#    treeview.heading("translation", text="Translation")
-#    if tag == "text":
-#        treeview.heading("character", text="Char")
-#        treeview.column("character", width=10)
-        
-#    scrollbar = Scrollbar(f, command=treeview.yview)
-#    scrollbar.grid(column=1, row=0, sticky="NS")
-#    treeview["yscrollcommand"] = scrollbar.set
-    
-#    f.grid_columnconfigure(0, weight=1)
-#    f.grid_rowconfigure(0, weight=1)
-
-#treeviews["text"].bind("<Double Button-1>", doubleClickToEdit)
 
 root.mainloop()
