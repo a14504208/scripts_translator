@@ -13,7 +13,7 @@ class ScriptView(ttk.Frame):
         Scripts take form as {iid: [comment, orig, trans]}
         """
         
-        ttk.Frame(self, master)
+        ttk.Frame.__init__(self, master)
         self.tag = tag
         self.__scripts = scripts
         

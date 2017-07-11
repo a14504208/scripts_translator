@@ -7,6 +7,7 @@ Created on Mon Jul 10 19:47:49 2017
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+from script_view import ScriptView
 
 import re
 
@@ -96,7 +97,7 @@ def doubleClickToEdit(event):
 root = Tk()
 root.title("Scripts Traslator")
 
-root.option_add("*tearOff", False)\
+root.option_add("*tearOff", False)
 
 # Add menubar
 menubar = Menu(root)
@@ -120,32 +121,33 @@ frames = {}
 treeviews = {}
 
 for tag in tags:
-    f = ttk.Frame(n)
-    if tag == "text":
-        treeview = ttk.Treeview(f, columns=("character", "original", "translation"))
-    else:
-        treeview = ttk.Treeview(f, columns=("original", "translation"))
+#    f = ttk.Frame(n)
+#    if tag == "text":
+#        treeview = ttk.Treeview(f, columns=("character", "original", "translation"))
+#    else:
+#        treeview = ttk.Treeview(f, columns=("original", "translation"))
+    f = ScriptView(n, tag)
     
-    frames[tag] = f
-    treeviews[tag] = treeview
+#    frames[tag] = f
+#    treeviews[tag] = treeview
     n.add(f, text = tag.capitalize())
     
-    treeview.grid(column=0, row=0, sticky="WNSE")
-    treeview["show"] = "headings"
+#    treeview.grid(column=0, row=0, sticky="WNSE")
+#    treeview["show"] = "headings"
     
-    treeview.heading("original", text="Original")
-    treeview.heading("translation", text="Translation")
-    if tag == "text":
-        treeview.heading("character", text="Char")
-        treeview.column("character", width=10)
+#    treeview.heading("original", text="Original")
+#    treeview.heading("translation", text="Translation")
+#    if tag == "text":
+#        treeview.heading("character", text="Char")
+#        treeview.column("character", width=10)
         
-    scrollbar = Scrollbar(f, command=treeview.yview)
-    scrollbar.grid(column=1, row=0, sticky="NS")
-    treeview["yscrollcommand"] = scrollbar.set
+#    scrollbar = Scrollbar(f, command=treeview.yview)
+#    scrollbar.grid(column=1, row=0, sticky="NS")
+#    treeview["yscrollcommand"] = scrollbar.set
     
-    f.grid_columnconfigure(0, weight=1)
-    f.grid_rowconfigure(0, weight=1)
+#    f.grid_columnconfigure(0, weight=1)
+#    f.grid_rowconfigure(0, weight=1)
 
-treeviews["text"].bind("<Double Button-1>", doubleClickToEdit)
+#treeviews["text"].bind("<Double Button-1>", doubleClickToEdit)
 
 root.mainloop()
