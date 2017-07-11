@@ -11,6 +11,8 @@ from script_view import ScriptView
 
 import re
 
+fileName = ""
+
 def parseScripts(filepath):
     fp = open(filepath, encoding="UTF-8")
     
@@ -47,6 +49,8 @@ def parseScripts(filepath):
             
         line = fp.readline()
     
+    fp.close()
+    
     return parsed
 
 def setPanels(n, scripts):
@@ -62,13 +66,24 @@ def setPanels(n, scripts):
         n.add(panel, text = tag.capitalize())
 
 def openFile():
+    global fileName
     fileName = filedialog.askopenfilename()
     scripts = parseScripts(fileName)
-    
+        
     setPanels(n, scripts)
 
 def saveFile():
-    pass
+    sep = "///================================================================================"
+    script_arr = []
+    
+    fp = open(fileName + ".tmp", "w", encoding="UTF-8")
+    
+    for tab_name in n.tabs():        
+        script_arr.append(n.children[tab_name.split(".")[2]].outputScripts())
+     
+    fp.write(("\n"+sep+"\n\n").join(script_arr))
+    
+    fp.close()
 
 if __name__ == "__main__":
     root = Tk()
@@ -89,7 +104,7 @@ if __name__ == "__main__":
     menu_file.add_command(label = "Save file", command = saveFile)
     
     # Create, display and config the notebook
-    # n is the only necessaru global variable used by other function
+    # n is global variable used by other function
     n = ttk.Notebook(root, padding=(5, 5, 12, 0))
     n.grid(column=0, row=0, sticky="NSWE")
     
