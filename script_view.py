@@ -10,13 +10,12 @@ from tkinter import ttk
 import re
 
 class ScriptView(ttk.Frame):
-    def __init__(self, master, tag, scripts = None):
+    def __init__(self, master, scripts):
         """
         Scripts take form as {iid: [comment, orig, trans]}
         """
         
         ttk.Frame.__init__(self, master)
-        self.tag = tag
         self.__scripts = scripts
         
         # Bind treeview to the self frame
@@ -60,9 +59,6 @@ class ScriptView(ttk.Frame):
         """
         Display scripts in the treeview
         """
-        if not self.__scripts:
-            return
-        
         for iid in self.__scripts.keys():
             char_re = re.compile("【(.+)】")
             
@@ -84,3 +80,19 @@ class ScriptView(ttk.Frame):
     
     def outputScripts(self):
         pass
+    
+
+#def doubleClickToEdit(event):
+#    rowid = treeviews["text"].identify_row(event.y)
+#    colid = treeviews["text"].identify_column(event.x)
+#    
+#    x, y, width, height = treeviews["text"].bbox(rowid, colid)
+#    
+#    text = treeviews["text"].set(rowid, colid)
+#    
+#    entry = Entry(treeviews["text"])
+#    entry.place(x = x, y = y, width = width, height = height)
+#    entry.insert(0, text)
+#    entry.focus_set()
+#    entry.select_range(0, "end")
+#    entry.bind("<Return>", lambda e: entry.destroy())

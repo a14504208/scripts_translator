@@ -49,60 +49,55 @@ def parseScripts(filepath):
     
     return parsed
 
-def openFile():
-    fileName = filedialog.askopenfilename()
-    parsed = parseScripts(fileName)
-    
+def setPanels(n, scripts):
+    """
+    Delete existing tabs in the notebook n, then display tabs to n, with keys 
+    of scripts as the tag of the tab
+    """
     for tab in n.tabs():
         n.forget(tab)
+        
+    for tag in scripts.keys():
+        panel = ScriptView(n, scripts[tag])
+        n.add(panel, text = tag.capitalize())
+
+def openFile():
+    fileName = filedialog.askopenfilename()
+    scripts = parseScripts(fileName)
     
-    for tag in parsed.keys():
-        f = ScriptView(n, tag, parsed[tag])
-        n.add(f, text = tag.capitalize())
+    setPanels(n, scripts)
+
+def saveFile():
+    pass
+
+if __name__ == "__main__":
+    root = Tk()
+    root.title("Scripts Traslator")
     
-def doubleClickToEdit(event):
-    rowid = treeviews["text"].identify_row(event.y)
-    colid = treeviews["text"].identify_column(event.x)
+    root.option_add("*tearOff", False)
     
-    x, y, width, height = treeviews["text"].bbox(rowid, colid)
+    # Add menubar
+    menubar = Menu(root)
+    root["menu"] = menubar
     
-    text = treeviews["text"].set(rowid, colid)
+    menu_file = Menu(menubar)
+    menubar.add_cascade(menu=menu_file, label = "File")
     
-    entry = Entry(treeviews["text"])
-    entry.place(x = x, y = y, width = width, height = height)
-    entry.insert(0, text)
-    entry.focus_set()
-    entry.select_range(0, "end")
-    entry.bind("<Return>", lambda e: entry.destroy())
-
-root = Tk()
-root.title("Scripts Traslator")
-
-root.option_add("*tearOff", False)
-
-# Add menubar
-menubar = Menu(root)
-root["menu"] = menubar
-
-menu_file = Menu(menubar)
-menubar.add_cascade(menu=menu_file, label = "File")
-
-menu_file.add_command(label = "Open...", command = openFile)
-
-tags = ["name", "text", "other"]
-
-# Create and config the outer frame
-n = ttk.Notebook(root, padding=(5, 5, 12, 0))
-n.grid(column=0, row=0, sticky="NSWE")
-
-root.grid_columnconfigure(0, weight=1)
-root.grid_rowconfigure(0, weight=1)
-
-frames = {}
-treeviews = {}
-
-for tag in tags:
-    f = ScriptView(n, tag)
-    n.add(f, text = tag.capitalize())
-
-root.mainloop()
+    # Add open file button
+    menu_file.add_command(label = "Open...", command = openFile)
+    # Add save file button
+    menu_file.add_command(label = "Save file", command = saveFile)
+    
+    # Create, display and config the notebook
+    # n is the only necessaru global variable used by other function
+    n = ttk.Notebook(root, padding=(5, 5, 12, 0))
+    n.grid(column=0, row=0, sticky="NSWE")
+    
+    root.grid_columnconfigure(0, weight=1)
+    root.grid_rowconfigure(0, weight=1)
+    
+    # Temporary line, replaced by reading temp file in the future
+    openFile()
+    
+    root.mainloop()
+    
