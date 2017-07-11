@@ -9,19 +9,20 @@ from tkinter import ttk
 from tkinter import filedialog
 from script_view import ScriptView
 
+import script_config
+
 import re
+
+fileName = ""
 
 def parseScripts(filepath):
     fp = open(filepath, encoding="UTF-8")
+    types = script_config.types
+
+    iid_re = re.compile("<.+(([{0}])[0-9]+)>".format("".join(types.keys())))
     
-    iid_re = re.compile("<.+(([NTZ])[0-9]+)>")
-    
-    tags = {"N": "name", "T": "text", "Z": "other"}
-    
-    # In the form of {iid: [comment, orig, trans]}    
-    parsed = {"name": {},
-              "text": {},
-              "other": {}}
+    # In the form of {type: {iid: [comment, orig, trans]}}
+    parsed = {tag: {} for tag in types.values()}
     
     # Expect file in the triad form: comment begin with //, orig followed by
     # trans
@@ -36,7 +37,7 @@ def parseScripts(filepath):
             orig_line = fp.readline()
             head = iid_re.search(orig_line)
             iid = head.group(1)
-            tag = tags[head.group(2)]
+            tag = types[head.group(2)]
             orig = orig_line[head.end():].rstrip()
             
             trans_line = fp.readline()
@@ -46,6 +47,8 @@ def parseScripts(filepath):
             parsed[tag][iid] = (comment, orig, trans)
             
         line = fp.readline()
+    
+    fp.close()
     
     return parsed
 
@@ -62,13 +65,24 @@ def setPanels(n, scripts):
         n.add(panel, text = tag.capitalize())
 
 def openFile():
+    global fileName
     fileName = filedialog.askopenfilename()
     scripts = parseScripts(fileName)
-    
+        
     setPanels(n, scripts)
 
 def saveFile():
-    pass
+    sep = script_config.sep
+    script_arr = []
+    
+    fp = open(fileName + ".tmp", "w", encoding="UTF-8")
+    
+    for tab_name in n.tabs():        
+        script_arr.append(n.children[tab_name.split(".")[2]].outputScripts())
+     
+    fp.write(sep.join(script_arr))
+    
+    fp.close()
 
 if __name__ == "__main__":
     root = Tk()
@@ -89,7 +103,7 @@ if __name__ == "__main__":
     menu_file.add_command(label = "Save file", command = saveFile)
     
     # Create, display and config the notebook
-    # n is the only necessaru global variable used by other function
+    # n is global variable used by other function
     n = ttk.Notebook(root, padding=(5, 5, 12, 0))
     n.grid(column=0, row=0, sticky="NSWE")
     

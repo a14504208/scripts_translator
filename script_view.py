@@ -59,7 +59,7 @@ class ScriptView(ttk.Frame):
         """
         Display scripts in the treeview
         """
-        for iid in self.__scripts.keys():
+        for iid in sorted(self.__scripts.keys()):            
             char_re = re.compile("【(.+)】")
             
             comment, orig, trans = self.__scripts[iid]
@@ -79,8 +79,16 @@ class ScriptView(ttk.Frame):
         pass
     
     def outputScripts(self):
-        pass
-    
+        triad_arr = []
+        
+        for iid in sorted(self.__scripts.keys()):
+            comment = self.__scripts[iid][0]
+            orig_line = "<ja{0}>{1}".format(iid, self.__scripts[iid][1])
+            trans_line = "<ch{0}>{1}".format(iid, self.__scripts[iid][2])
+            triad = "\n".join([comment, orig_line, trans_line]) + "\n"
+            triad_arr.append(triad)
+        
+        return "\n".join(triad_arr)
 
 #def doubleClickToEdit(event):
 #    rowid = treeviews["text"].identify_row(event.y)
