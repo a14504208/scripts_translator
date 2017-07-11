@@ -7,128 +7,97 @@ Created on Mon Jul 10 19:47:49 2017
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+from script_view import ScriptView
 
 import re
 
 def parseScripts(filepath):
     fp = open(filepath, encoding="UTF-8")
-    parsed_orig = {"name": [],
-                   "text": [],
-                   "other": []}
-    parsed_trans = {"name": [],
-                   "text": [],
-                   "other": []}
     
-    char_arr = []
+    iid_re = re.compile("<.+(([NTZ])[0-9]+)>")
     
-    tags = ["name", "text", "other"]
+    tags = {"N": "name", "T": "text", "Z": "other"}
     
-    orig_re = re.compile("<ja([TNZ])[0-9]+>")
-    trans_re = re.compile("<ch([TNZ])[0-9]+>")
-    text_comment_re = re.compile("//TEXT")
-    char_re = re.compile("【(.+)】")
+    # In the form of {iid: [comment, orig, trans]}    
+    parsed = {"name": {},
+              "text": {},
+              "other": {}}
     
-    for line in fp.readlines():
-        line = line.strip()
-        
-        search = text_comment_re.search(line)
-        if search:
-            search = char_re.search(line)
-            if search:
-                char_arr.append(search.group(1))
-            else:
-                char_arr.append("")
-            continue
+    # Expect file in the triad form: comment begin with //, orig followed by
+    # trans
+    line = fp.readline()
+    while (line != ""):
+        # Begin of the triad
+        if (line.startswith("///")):
+            pass
+        elif (line.startswith("//")):
+            comment = line.rstrip()
+            
+            orig_line = fp.readline()
+            head = iid_re.search(orig_line)
+            iid = head.group(1)
+            tag = tags[head.group(2)]
+            orig = orig_line[head.end():].rstrip()
+            
+            trans_line = fp.readline()
+            head = iid_re.search(trans_line)
+            trans = trans_line[head.end():].rstrip()
+            
+            parsed[tag][iid] = (comment, orig, trans)
+            
+        line = fp.readline()
+    
+    return parsed
 
-        search = orig_re.search(line)
-        if search:
-            if search.group(1) == "N":    
-                parsed_orig["name"].append(line[search.end():])
-            elif search.group(1) == "T":
-                parsed_orig["text"].append(line[search.end():])
-            else:
-                parsed_orig["other"].append(line[search.end():])
-            continue
+def setPanels(n, scripts):
+    """
+    Delete existing tabs in the notebook n, then display tabs to n, with keys 
+    of scripts as the tag of the tab
+    """
+    for tab in n.tabs():
+        n.forget(tab)
         
-        search = trans_re.search(line)
-        if search:
-            if search.group(1) == "N":    
-                parsed_trans["name"].append(line[search.end():])
-            elif search.group(1) == "T":
-                parsed_trans["text"].append(line[search.end():])
-            else:
-                parsed_trans["other"].append(line[search.end():])
-    
-    parsed_text = {}
-    for tag in tags:
-        if tag == "text":
-            parsed_text[tag] = zip(char_arr, parsed_orig[tag], parsed_trans[tag])
-        else:
-            parsed_text[tag] = zip(parsed_orig[tag], parsed_trans[tag])
-    
-    return parsed_text
+    for tag in scripts.keys():
+        panel = ScriptView(n, scripts[tag])
+        n.add(panel, text = tag.capitalize())
 
 def openFile():
     fileName = filedialog.askopenfilename()
-    texts = parseScripts(fileName)
+    scripts = parseScripts(fileName)
     
-    for tag in texts.keys():
-        for row in treeviews[tag].get_children():
-            treeviews[tag].delete(row)
-        for line in texts[tag]:
-            treeviews[tag].insert("", "end", values=line)
-        
-root = Tk()
-root.title("Scripts Traslator")
+    setPanels(n, scripts)
 
-root.option_add("*tearOff", False)\
+def saveFile():
+    pass
 
-# Add menubar
-menubar = Menu(root)
-root["menu"] = menubar
-
-menu_file = Menu(menubar)
-menubar.add_cascade(menu=menu_file, label = "File")
-
-menu_file.add_command(label = "Open...", command = openFile)
-
-tags = ["name", "text", "other"]
-
-# Create and config the outer frame
-n = ttk.Notebook(root, padding=(5, 5, 12, 0))
-n.grid(column=0, row=0, sticky="NSWE")
-
-root.grid_columnconfigure(0, weight=1)
-root.grid_rowconfigure(0, weight=1)
-
-frames = {}
-treeviews = {}
-
-for tag in tags:
-    f = ttk.Frame(n)
-    if tag == "text":
-        treeview = ttk.Treeview(f, columns=("character", "original", "translation"))
-    else:
-        treeview = ttk.Treeview(f, columns=("original", "translation"))
+if __name__ == "__main__":
+    root = Tk()
+    root.title("Scripts Traslator")
     
-    frames[tag] = f
-    treeviews[tag] = treeview
-    n.add(f, text = tag.capitalize())
+    root.option_add("*tearOff", False)
     
-    treeview.grid(column=0, row=0, sticky="WNSE")
-    treeview["show"] = "headings"
+    # Add menubar
+    menubar = Menu(root)
+    root["menu"] = menubar
     
-    treeview.heading("original", text="Original")
-    treeview.heading("translation", text="Translation")
-    if tag == "text":
-        treeview.heading("character", text="Char")
-        treeview.column("character", width=10)
-        
-    scrollbar = Scrollbar(f, command=treeview.yview)
-    scrollbar.grid(column=1, row=0, sticky="NS")
-    treeview["yscrollcommand"] = scrollbar.set
+    menu_file = Menu(menubar)
+    menubar.add_cascade(menu=menu_file, label = "File")
     
-    f.grid_columnconfigure(0, weight=1)
-    f.grid_rowconfigure(0, weight=1)
-
-root.mainloop()
+    # Add open file button
+    menu_file.add_command(label = "Open...", command = openFile)
+    # Add save file button
+    menu_file.add_command(label = "Save file", command = saveFile)
+    
+    # Create, display and config the notebook
+    # n is the only necessaru global variable used by other function
+    n = ttk.Notebook(root, padding=(5, 5, 12, 0))
+    n.grid(column=0, row=0, sticky="NSWE")
+    
+    root.grid_columnconfigure(0, weight=1)
+    root.grid_rowconfigure(0, weight=1)
+    
+    # Temporary line, replaced by reading temp file in the future
+    openFile()
+    
+    root.mainloop()
+    
