@@ -83,7 +83,6 @@ def saveFile(event=None):
     fp.write(sep.join(script_arr))
     
     fp.close()
-    print("test")
 
 if __name__ == "__main__":
     root = Tk()

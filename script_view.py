@@ -26,8 +26,8 @@ class ScriptView(ttk.Frame):
         # Bind events to treeview
         self.bindTreeview()
         
-        # Display treeview
-        self.displayTreeview()
+        # Display treeview and associated widget
+        self.displayWidgets()
         
         # Display scripts
         self.displayScripts()
@@ -36,10 +36,11 @@ class ScriptView(ttk.Frame):
         self.__tree.bind("<Double Button-1>", self.openEditWindow)
         self.__tree.bind("<Return>", self.openEditWindow)
     
-    def displayTreeview(self):
+    def displayWidgets(self):
         """
-        Put treeview and scrollbar on the frame
+        Put widget on the frame
         """
+        # Setup treeview
         self.__tree.grid(column=0, row=0, sticky="WNSE")
         self.__tree["show"] = "headings"
         
@@ -49,18 +50,28 @@ class ScriptView(ttk.Frame):
         
         self.__tree.column("char", width=100, stretch=False)
         
-        # Set scrollbar
+        # Setup different color for state of translation
+        self.__tree.tag_configure("translated", background="#7eff7e")
+        self.__tree.tag_configure("untranslated", background="#ff9e9e")
+        
+        # Setup scrollbar
         scrollbar = ttk.Scrollbar(self, command=self.__tree.yview)
         self.__tree["yscrollcommand"] = scrollbar.set
         scrollbar.grid(column=1, row=0, sticky="NS")
         
+        # Setup popup menu to change state of translation
+        menu = Menu(self.__tree, tearoff = 0)
+        
+        # Add menu command
+        menu.add_command(label="Set As Translated", command=self.setAsTranslated)
+        menu.add_command(label="Set As Untranslated", command=self.setAsUntranslated)
+        
+        # Bind to the treeview
+        self.__tree.bind("<Button-3>", lambda e: menu.post(e.x_root, e.y_root))
+        
         # Adjust to resize
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
-        
-        # Setup different color for state of translation
-        self.__tree.tag_configure("translated", background="#7eff7e")
-        self.__tree.tag_configure("untranslated", background="#ff9e9e")
         
     def displayScripts(self):
         """
@@ -97,9 +108,33 @@ class ScriptView(ttk.Frame):
         self.__scripts[rowid][2] = trans
         self.__tree.set(rowid, "trans", trans)
         
+        # Change the underlying tag
         if not self.__scripts[rowid][0].endswith("*"):
             self.__scripts[rowid][0] += "*"
             self.__tree.item(rowid, tags="translated")
+        
+        self.update()
+    
+    def setAsTranslated(self):
+        rowids = self.__tree.selection()
+        
+        for rowid in rowids:
+            if not self.__scripts[rowid][0].endswith("*"):
+                self.__scripts[rowid][0] += "*"
+                self.__tree.item(rowid, tags="translated")
+        
+        self.update()
+
+    def setAsUntranslated(self):
+        rowids = self.__tree.selection()
+        
+        for rowid in rowids:
+            if self.__scripts[rowid][0].endswith("*"):
+                self.__scripts[rowid] = self.__scripts[rowid][:-1]
+                self.__tree.item(rowid, tags="untranslated")
+                
+        self.update()
+
     
     def outputScripts(self):
         triad_arr = []
@@ -112,3 +147,6 @@ class ScriptView(ttk.Frame):
             triad_arr.append(triad)
         
         return "\n".join(triad_arr)
+    
+    def update(self):
+        pass
