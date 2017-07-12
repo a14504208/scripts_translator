@@ -44,7 +44,7 @@ def parseScripts(filepath):
             head = iid_re.search(trans_line)
             trans = trans_line[head.end():].rstrip()
             
-            parsed[tag][iid] = (comment, orig, trans)
+            parsed[tag][iid] = [comment, orig, trans]
             
         line = fp.readline()
     
@@ -64,14 +64,14 @@ def setPanels(n, scripts):
         panel = ScriptView(n, scripts[tag])
         n.add(panel, text = tag.capitalize())
 
-def openFile():
+def openFile(event=None):
     global fileName
     fileName = filedialog.askopenfilename()
     scripts = parseScripts(fileName)
         
     setPanels(n, scripts)
 
-def saveFile():
+def saveFile(event=None):
     sep = script_config.sep
     script_arr = []
     
@@ -101,6 +101,7 @@ if __name__ == "__main__":
     menu_file.add_command(label = "Open...", command = openFile)
     # Add save file button
     menu_file.add_command(label = "Save file", command = saveFile)
+    root.bind("<Control-Key-s>", saveFile)
     
     # Create, display and config the notebook
     # n is global variable used by other function
@@ -109,7 +110,7 @@ if __name__ == "__main__":
     
     root.grid_columnconfigure(0, weight=1)
     root.grid_rowconfigure(0, weight=1)
-    
+        
     # Temporary line, replaced by reading temp file in the future
     openFile()
     

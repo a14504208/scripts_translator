@@ -9,12 +9,14 @@ from tkinter import ttk
 
 import re
 
+from edit_window import EditWindow
+
 class ScriptView(ttk.Frame):
     def __init__(self, master, scripts):
         """
         Scripts take form as {iid: [comment, orig, trans]}
         """
-        
+       
         ttk.Frame.__init__(self, master)
         self.__scripts = scripts
         
@@ -24,19 +26,21 @@ class ScriptView(ttk.Frame):
         # Bind events to treeview
         self.bindTreeview()
         
-        # Display treeview
-        self.displayTreeview()
+        # Display treeview and associated widget
+        self.displayWidgets()
         
         # Display scripts
         self.displayScripts()
     
     def bindTreeview(self):
-        pass
+        self.__tree.bind("<Double Button-1>", self.openEditWindow)
+        self.__tree.bind("<Return>", self.openEditWindow)
     
-    def displayTreeview(self):
+    def displayWidgets(self):
         """
-        Put treeview and scrollbar on the frame
+        Put widget on the frame
         """
+        # Setup treeview
         self.__tree.grid(column=0, row=0, sticky="WNSE")
         self.__tree["show"] = "headings"
         
@@ -46,10 +50,24 @@ class ScriptView(ttk.Frame):
         
         self.__tree.column("char", width=100, stretch=False)
         
-        # Set scrollbar
+        # Setup different color for state of translation
+        self.__tree.tag_configure("translated", background="#7eff7e")
+        self.__tree.tag_configure("untranslated", background="#ff9e9e")
+        
+        # Setup scrollbar
         scrollbar = ttk.Scrollbar(self, command=self.__tree.yview)
         self.__tree["yscrollcommand"] = scrollbar.set
         scrollbar.grid(column=1, row=0, sticky="NS")
+        
+        # Setup popup menu to change state of translation
+        menu = Menu(self.__tree, tearoff = 0)
+        
+        # Add menu command
+        menu.add_command(label="Set As Translated", command=self.setAsTranslated)
+        menu.add_command(label="Set As Untranslated", command=self.setAsUntranslated)
+        
+        # Bind to the treeview
+        self.__tree.bind("<Button-3>", lambda e: menu.post(e.x_root, e.y_root))
         
         # Adjust to resize
         self.grid_columnconfigure(0, weight=1)
@@ -58,7 +76,7 @@ class ScriptView(ttk.Frame):
     def displayScripts(self):
         """
         Display scripts in the treeview
-        """
+        """      
         for iid in sorted(self.__scripts.keys()):            
             char_re = re.compile("【(.+)】")
             
@@ -70,13 +88,53 @@ class ScriptView(ttk.Frame):
             else:
                 char = ""
             
-            self.__tree.insert("", "end", iid=iid, values=(char, orig, trans))
+            state = "translated" if comment.endswith("*") else "untranslated"
+            
+            self.__tree.insert("", "end", iid=iid, values=(char, orig, trans),
+                               tags = state)
+    def openEditWindow(self, event):
+        """
+        Popup a window for editing the line
+        """
+        # Get the contents in the row
+        rowid = self.__tree.focus()
+        contents = self.__tree.set(rowid)
+        
+        EditWindow(self, rowid, contents)
+                
+
+    def editLine(self, rowid, trans):
+        trans = trans.rstrip()
+        self.__scripts[rowid][2] = trans
+        self.__tree.set(rowid, "trans", trans)
+        
+        # Change the underlying tag
+        if not self.__scripts[rowid][0].endswith("*"):
+            self.__scripts[rowid][0] += "*"
+            self.__tree.item(rowid, tags="translated")
+        
+        self.update()
     
-    def doubleClickToEdit(self):
-        pass
-    
-    def editScript(self):
-        pass
+    def setAsTranslated(self):
+        rowids = self.__tree.selection()
+        
+        for rowid in rowids:
+            if not self.__scripts[rowid][0].endswith("*"):
+                self.__scripts[rowid][0] += "*"
+                self.__tree.item(rowid, tags="translated")
+        
+        self.update()
+
+    def setAsUntranslated(self):
+        rowids = self.__tree.selection()
+        
+        for rowid in rowids:
+            if self.__scripts[rowid][0].endswith("*"):
+                self.__scripts[rowid] = self.__scripts[rowid][:-1]
+                self.__tree.item(rowid, tags="untranslated")
+                
+        self.update()
+
     
     def outputScripts(self):
         triad_arr = []
@@ -89,18 +147,6 @@ class ScriptView(ttk.Frame):
             triad_arr.append(triad)
         
         return "\n".join(triad_arr)
-
-#def doubleClickToEdit(event):
-#    rowid = treeviews["text"].identify_row(event.y)
-#    colid = treeviews["text"].identify_column(event.x)
-#    
-#    x, y, width, height = treeviews["text"].bbox(rowid, colid)
-#    
-#    text = treeviews["text"].set(rowid, colid)
-#    
-#    entry = Entry(treeviews["text"])
-#    entry.place(x = x, y = y, width = width, height = height)
-#    entry.insert(0, text)
-#    entry.focus_set()
-#    entry.select_range(0, "end")
-#    entry.bind("<Return>", lambda e: entry.destroy())
+    
+    def update(self):
+        pass
