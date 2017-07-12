@@ -33,7 +33,8 @@ class ScriptView(ttk.Frame):
         self.displayScripts()
     
     def bindTreeview(self):
-        self.__tree.bind("<Double Button-1>", self.doubleClickToEdit)
+        self.__tree.bind("<Double Button-1>", self.openEditWindow)
+        self.__tree.bind("<Return>", self.openEditWindow)
     
     def displayTreeview(self):
         """
@@ -74,21 +75,20 @@ class ScriptView(ttk.Frame):
             
             self.__tree.insert("", "end", iid=iid, values=(char, orig, trans))
     
-    def doubleClickToEdit(self, event):
+    def openEditWindow(self, event):
         """
-        Double click on the row to popup a window for editing the line
+        Popup a window for editing the line
         """
         # Get the contents in the row
-        rowid = self.__tree.identify_row(event.y)
+        rowid = self.__tree.focus()
         contents = self.__tree.set(rowid)
         
         EditWindow(self, rowid, contents)
-        
-        #edit_w = Toplevel(self)
-        
+                
 
-    def editLine(self):
-        pass
+    def editLine(self, rowid, trans):
+        self.__scripts[rowid][2] = trans
+        self.__tree.set(rowid, "trans", trans)
     
     def outputScripts(self):
         triad_arr = []
@@ -101,18 +101,3 @@ class ScriptView(ttk.Frame):
             triad_arr.append(triad)
         
         return "\n".join(triad_arr)
-
-#def doubleClickToEdit(event):
-#    rowid = treeviews["text"].identify_row(event.y)
-#    colid = treeviews["text"].identify_column(event.x)
-#    
-#    x, y, width, height = treeviews["text"].bbox(rowid, colid)
-#    
-#    text = treeviews["text"].set(rowid, colid)
-#    
-#    entry = Entry(treeviews["text"])
-#    entry.place(x = x, y = y, width = width, height = height)
-#    entry.insert(0, text)
-#    entry.focus_set()
-#    entry.select_range(0, "end")
-#    entry.bind("<Return>", lambda e: entry.destroy())

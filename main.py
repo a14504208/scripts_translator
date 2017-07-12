@@ -44,7 +44,7 @@ def parseScripts(filepath):
             head = iid_re.search(trans_line)
             trans = trans_line[head.end():].rstrip()
             
-            parsed[tag][iid] = (comment, orig, trans)
+            parsed[tag][iid] = [comment, orig, trans]
             
         line = fp.readline()
     
@@ -112,8 +112,6 @@ if __name__ == "__main__":
         
     # Temporary line, replaced by reading temp file in the future
     openFile()
-    
-    
     
     root.mainloop()
     
