@@ -93,6 +93,7 @@ class ScriptView(ttk.Frame):
                 
 
     def editLine(self, rowid, trans):
+        trans = trans.rstrip()
         self.__scripts[rowid][2] = trans
         self.__tree.set(rowid, "trans", trans)
         
@@ -109,6 +110,5 @@ class ScriptView(ttk.Frame):
             trans_line = "<ch{0}>{1}".format(iid, self.__scripts[iid][2])
             triad = "\n".join([comment, orig_line, trans_line]) + "\n"
             triad_arr.append(triad)
-            
         
         return "\n".join(triad_arr)
