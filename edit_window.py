@@ -38,13 +38,13 @@ class EditWindow(Toplevel):
         btn_f = ttk.Frame(f, padding=(0, 5, 0, 5))
         btn_f.grid(column=1, row=2, sticky="E")
                 
-        OK_btn = ttk.Button(btn_f, text="OK(CTRL-Enter)", command=self.submitEdit)
+        OK_btn = ttk.Button(btn_f, text="OK(CTRL-S)", command=self.submitEdit)
         OK_btn.grid(column=0, row=0)
         
         cancel_btn = ttk.Button(btn_f, text="Cancel(ESC)", command=self.close)
         cancel_btn.grid(column=1, row=0)
         
-        self.bind("<Control-Return>", self.submitEdit)
+        self.bind("<Control-Key-s>", self.submitEdit)
         self.bind("<Escape>", self.close)
         
         self.rowconfigure(0, weight=1)

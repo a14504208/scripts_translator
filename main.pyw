@@ -64,14 +64,14 @@ def setPanels(n, scripts):
         panel = ScriptView(n, scripts[tag])
         n.add(panel, text = tag.capitalize())
 
-def openFile():
+def openFile(event=None):
     global fileName
     fileName = filedialog.askopenfilename()
     scripts = parseScripts(fileName)
         
     setPanels(n, scripts)
 
-def saveFile():
+def saveFile(event=None):
     sep = script_config.sep
     script_arr = []
     
@@ -83,6 +83,7 @@ def saveFile():
     fp.write(sep.join(script_arr))
     
     fp.close()
+    print("test")
 
 if __name__ == "__main__":
     root = Tk()
@@ -101,6 +102,7 @@ if __name__ == "__main__":
     menu_file.add_command(label = "Open...", command = openFile)
     # Add save file button
     menu_file.add_command(label = "Save file", command = saveFile)
+    root.bind("<Control-Key-s>", saveFile)
     
     # Create, display and config the notebook
     # n is global variable used by other function
