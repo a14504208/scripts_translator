@@ -16,7 +16,7 @@ class ScriptView(ttk.Frame):
         """
         Scripts take form as {iid: [comment, orig, trans]}
         """
-        
+       
         ttk.Frame.__init__(self, master)
         self.__scripts = scripts
         
@@ -58,10 +58,14 @@ class ScriptView(ttk.Frame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         
+        # Setup different color for state of translation
+        self.__tree.tag_configure("translated", background="#7eff7e")
+        self.__tree.tag_configure("untranslated", background="#ff9e9e")
+        
     def displayScripts(self):
         """
         Display scripts in the treeview
-        """
+        """      
         for iid in sorted(self.__scripts.keys()):            
             char_re = re.compile("【(.+)】")
             
@@ -73,8 +77,10 @@ class ScriptView(ttk.Frame):
             else:
                 char = ""
             
-            self.__tree.insert("", "end", iid=iid, values=(char, orig, trans))
-    
+            state = "translated" if comment.endswith("*") else "untranslated"
+            
+            self.__tree.insert("", "end", iid=iid, values=(char, orig, trans),
+                               tags = state)
     def openEditWindow(self, event):
         """
         Popup a window for editing the line
@@ -89,6 +95,10 @@ class ScriptView(ttk.Frame):
     def editLine(self, rowid, trans):
         self.__scripts[rowid][2] = trans
         self.__tree.set(rowid, "trans", trans)
+        
+        if not self.__scripts[rowid][0].endswith("*"):
+            self.__scripts[rowid][0] += "*"
+            self.__tree.item(rowid, tags="translated")
     
     def outputScripts(self):
         triad_arr = []
@@ -99,5 +109,6 @@ class ScriptView(ttk.Frame):
             trans_line = "<ch{0}>{1}".format(iid, self.__scripts[iid][2])
             triad = "\n".join([comment, orig_line, trans_line]) + "\n"
             triad_arr.append(triad)
+            
         
         return "\n".join(triad_arr)
